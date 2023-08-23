@@ -1,0 +1,50 @@
+.ORIG x3000
+;This is lab 2 
+;Author: Fahim Imtiaz(The next Nikola Tesla)
+;Date(3/07/2002)
+
+
+LD R0 NUM1 ;loads the value at NUM1 into R0
+LDR R1,R0 #0 ;LOADS THE VALUE OF FRST NUMBER INTO R0
+
+LD R2, MASK1 ;loads Mask1 into R2 
+LD R3, MASK2 ;loads MASK 2 into R3
+
+AND R2, R2, R1 ; ANDS R1 and R2 and stores the value in R2
+AND R3, R3, R1 ; ANDS R1 and R3 and stores the value in R3 
+
+AND R4, R4 #0  ; ANDs R4 and #0 and stores in R4
+ADD R4, R4 #8  ; ADDS R4 and #8 and stores in R4
+
+ADD R2, R2 #0  ; ADDS R2 and #0 and stores in R2 
+
+AGAIN    ADD R2, R2, #0  ;again ADDS R2 and #0 and stores in R2
+
+    BRN SKIP
+    
+    ADD R2, R2, R2
+    BR HOP
+
+SKIP    ADD R2, R2, R2
+        ADD R2, R2, #1
+         
+HOP     ADD R4, R4 #-1
+         
+        BRP AGAIN
+
+NOT R5, R3  ; STORES NOT OF R3 INTO R5
+ADD R5, R5, #1  ; ADDS R5 AND 1 AND STORES IN R5 
+ADD R5, R5, R2 ; ADDS R5 WITH R2 AND STORES INTO R5 
+
+BRN NEGATIV
+STR R3, R0, #1; if R5 is not negative, that means R2 is larger, so store R3 not R2
+BR  EXIT
+NEGATIV STR R2, R0, #1; if R5 is negative, that means R3 is larger, so store R2 not R5
+
+
+EXIT Halt 
+
+NUM1 .Fill x4000
+MASK1   .Fill xFF00
+MASK2   .Fill x00FF
+.END
