@@ -1,0 +1,195 @@
+; OPERATING SYSTEM CODE
+
+.ORIG x500
+        
+        LD R0, VEC
+        LD R1, ISR
+        ; (1) Initialize interrupt vector table with the starting address of ISR.
+	
+	STR R1 R0 #0
+
+        ; (2) Set bit 14 of KBSR. [To Enable Interrupt]
+	
+        LDI R3 KBSR
+        NOT R3 R3 
+	LD R2 M
+	AND R3 R3 R2
+	NOT R3 R3
+	STI R3 KBSR
+	
+
+        ; (3) Set up system stack to enter user space. So that PC can return to the main user program at x3000.
+	; R6 is the Stack Pointer. Remember to Push PC and PSR in the right order. Hint: Refer State Graph
+
+        LD R2 PSR
+        LD R6 PC
+        ADD R6 R6 #-1
+        STR R2 R6 #0
+        LD R2 PC
+        ADD R6 R6 #-1
+        STR R2 R6 #0
+
+
+        ; (4) Enter user Program.
+        RTI
+        
+VEC     .FILL x0180
+ISR     .FILL x1700
+KBSR    .FILL xFE00
+M    .FILL xBFFF
+PSR     .FILL x8002
+PC      .FILL x3000
+
+.END
+
+
+; INTERRUPT SERVICE ROUTINE
+
+.ORIG x1700
+ST R0, SAVER0
+ST R1, SAVER1
+ST R2, SAVER2
+ST R3, SAVER3
+ST R7, SAVER7
+
+; CHECK THE KIND OF CHARACTER TYPED AND PRINT THE APPROPRIATE PROMPT
+LDI R0 KBDR    
+    
+NUM LD R4 ASCII_NUM
+    ADD R3 R0 R4
+    BRn ENDOFLABS
+    LD R5 NUMZ
+    ADD R3 R0 R5
+    BRp UC
+
+    LEA R0 STRING2
+    
+    
+SCL     LDR R2 R0 #0
+        BRz LOADS
+SCLB    LDI R5 DSRP
+        BRzp SCLB
+        STI R2 DDRP
+        ADD R0 R0 #1
+        BR SCL
+
+LDI R0 KBDR
+    
+UC 
+QS LD R2 ASCIIQ
+   ADD R3 R0 R2
+   BRZ ENDOFLAB
+   LD R4 ASCIIQL
+   ADD R3 R0 R4
+   BRZ ENDOFLAB
+   
+    LD R2 ASCII_UC
+    ADD R3 R0 R2
+    BRn ENDOFLABS
+    LD R4 ASC
+    ADD R3 R0 R4
+    BRp LC
+    
+ALPH    LEA R0 STRING1
+    
+SAL     LDR R2 R0 #0
+        BRz LOADS
+SALB    LDI R5 DSRP
+        BRzp SALB
+        STI R2 DDRP
+        ADD R0 R0 #1
+        BR SAL
+        
+
+LDI R0 KBDR
+
+
+
+LC  LD R2 ASCII_LC
+    ADD R3 R0 R2
+    BRn ENDOFLABS
+    LD R4 ASC2
+    ADD R3 R0 R4
+    BRp ENDOFLABS
+    BR ALPH
+    
+ENDOFLABS LEA R0 STRING3
+    
+SBL     LDR R2 R0 #0
+        BRz LOADS
+SBLB    LDI R5 DSRP
+        BRzp SBLB
+        STI R2 DDRP
+        ADD R0 R0 #1
+        BR SBL
+        
+
+ENDOFLAB LEA R0 STRING4
+FAH     LDR R2 R0 #0
+          BRz FINISH
+SDL       LDI R5 DSRP
+          BRzp SDL
+          STI R2 DDRP
+          ADD R0 R0 #1
+          BR FAH
+
+
+FINISH    HALT
+LOADS
+end LD R0, SAVER0
+    LD R1, SAVER1
+    LD R2, SAVER2
+    LD R3, SAVER3 
+    LD R7, SAVER7
+    RTI
+
+
+
+ASCII_NUM .FILL x-30
+NUMZ	.FILL x-39
+ASCII_LC  .FILL x-61
+ASCII_UC  .FILL x-41
+ASCIIQ  .FILL x-51
+ASCIIQL  .FILL x-71
+ASC    .FILL x-5a
+ASC2    .FILL x-7a
+KBDR .FILL xFE02
+DSRP  .FILL xFE04
+DDRP  .FILL xFE06
+STRING1 .STRINGZ "\nSuccess! An alphabet letter was detected.\n"
+STRING2 .STRINGZ "\nSuccess! A number was detected.\n"
+STRING3 .STRINGZ "\nERROR: The inputted character is invalid.\n"
+STRING4 .STRINGZ "\n---------- User has Quit the Program ----------\n"
+SAVER0 .BLKW x1
+SAVER1 .BLKW x1
+SAVER2 .BLKW x1
+SAVER3 .BLKW x1
+SAVER7 .BLKW x1
+.END
+
+
+
+
+; USER PROGRAM
+
+.ORIG x3000
+
+
+; MAIN USER PROGRAM
+; PRINT THE MESSAGE "Waiting for user input…" WITH A DELAY LOGIC
+
+
+USER
+    LEA R0 MSG
+    PUTS
+    LD R2 CNT
+LAY   ADD R2 R2 #-1
+    BRp LAY
+    BR USER
+
+
+
+
+CNT .FILL x8000
+MSG .STRINGZ  "Waiting for user input...\n"
+.END
