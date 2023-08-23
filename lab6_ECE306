@@ -1,0 +1,187 @@
+.ORIG x3000
+;Prompt the user with the message, "Type Course Number and press enter:"
+LEA R0 MESSAGE
+PUTS
+
+;Read the character that user types. Store each character in reserved block of memory. When user types enter store null
+LEA R1 COURSE
+LD R2 ENTER
+
+
+LOOP
+    GETC
+    ADD R3 R0 R2
+    BRz NULL
+    OUT
+    STR R0 R1 #0
+    ADD R1 R1 #1
+    ;LDR R4 R4 #0  VERY DANGEROUS ERROR 
+BR LOOP
+
+NULL
+AND R0 R0 #0
+STR R0 R1 #0
+
+;Search the linked list; Head pointer at x4000
+
+SEARCH
+    LDI R0 HEADPTR
+    BRz LAB6
+    
+    LDR R1 R0 #1
+    LEA R2 COURSE
+
+;R4 = 1 = match, R4 = 0 = no match
+JSR MATCH
+
+ADD R4 R4 #0
+BRz LAB6
+
+LEA R0 SPACE
+PUTS
+LD R5 COUNTER
+LEA R2 COURSE
+
+COURSEPRINT2
+    LDR R0 R2 #0
+    OUT
+    ADD R2 R2 #1
+    ADD R5 R5 #-1
+    BRp COURSEPRINT2
+    
+    LEA R0 OFFERED
+    PUTS
+BR FINISH
+
+LAB6 ;Lab 6 ;SEARCH 2
+    LDI R0 WAITHEADPTR
+    LD R1 WAITHEADPTR
+    
+    ST R1 SAVE4
+    ST R0 SAVE3
+
+BACK
+    ADD R0 R0 #0
+    BRz DISPLAY
+    
+    LDR R1 R0 #1
+    LEA R2 COURSE
+
+JSR MATCH   ;R4 = 1 = match, R4 = 0 = no match
+
+    ADD R4 R4 #0
+    BRz NOMATCH
+    BR DELETE
+
+DISPLAY
+    LEA R0 SPACE
+    PUTS
+    
+    LEA R0 NOTMATCH
+    PUTS
+
+BR FINISH
+
+NOMATCH
+    LDR R0 R0 #0
+    AND R6 R6 #0
+    LD R6 SAVE3
+    ST R6 SAVE4
+    ST R0 SAVE3
+
+BR BACK
+
+
+DELETE
+    LD R1 SAVE4
+    LD R6 SAVE3
+    
+    LDR R3 R6 #0
+    STR R3 R1 #0
+
+INSERT
+    LDI R0 HEADPTR
+    STR R0 R6 #0
+    STI R6 HEADPTR 
+
+LEA R0 SPACE
+PUTS
+LD R5 COUNTER
+LEA R2 COURSE
+
+COURSEPRINT3
+    LDR R0 R2 #0
+    OUT
+    ADD R2 R2 #1
+    ADD R5 R5 #-1
+    BRp COURSEPRINT3
+    
+    LEA R0 ADDED
+    PUTS
+
+FINISH
+HALT
+
+MATCH
+ST R1 SAVE1
+ST R2 SAVE2
+
+MATCH2
+LDR R5 R1 #0
+LDR R6 R2 #0
+BRz ZERO
+
+NOT R6 R6
+ADD R6 R6 #1
+ADD R5 R5 R6
+BRz R5ZERO
+AND R4 R4 #0
+BR ZEROJUMP
+
+R5ZERO
+ADD R1 R1 #1
+ADD R2 R2 #1
+BR MATCH2
+
+ZERO
+AND R4 R4 #0
+ADD R4 R4 #1
+ZEROJUMP
+LD R1 SAVE1
+LD R2 SAVE2
+JMP R7
+
+
+SAVE1 .FILL #0
+
+SAVE2 .FILL #0
+
+SAVE3 .FILL #0
+
+SAVE4 .FILL #0
+
+
+HEADPTR
+    .FILL x4000
+WAITHEADPTR
+    .FILL x4001
+MESSAGE
+    .STRINGZ "Type Course Number and press Enter: "
+COURSE
+    .BLKW x8
+COUNTER
+    .FILL x8
+ENTER
+    .FILL x-0A
+SPACE
+    .STRINGZ "\n"
+OFFERED
+    .STRINGZ " is already being offered this semester."
+
+NOTMATCH
+    .STRINGZ "The entered Course Number does not exist in the current course catalog."
+ADDED
+    .STRINGZ " has been added to this semester's course offerings!"
+
+.END
+
