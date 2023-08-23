@@ -1,0 +1,141 @@
+.ORIG x3000
+;Prompt the user COURSE with the message, "Type COURSE and press enter:"
+LEA R0 MESSAGE
+PUTS
+
+;Read the character that user types. Store each character in reserved block of memory. When user types enter store null
+LEA R1 COURSE
+LD R2 ENTER
+
+
+
+LOOP
+GETC 
+ADD R3 R0 R2
+BRz NULL
+OUT
+STR R0 R1 #0
+ADD R1 R1 #1
+;LDR R4 R4 #0
+BR LOOP
+
+NULL
+AND R0 R0 #0
+STR R0 R1 #0
+
+;Search the linked list; Head pointer at x4000
+SEARCH
+LDI R0 HEADPTR
+R0NULL
+ADD R0 R0 #0
+BRnp NO
+
+LEA R0 SPACE
+PUTS
+
+LD R5 COUNTER
+LEA R2 COURSE
+
+COURSEPRINT
+LDR R0 R2 #0
+OUT
+ADD R2 R2 #1
+ADD R5 R5 #-1
+BRp COURSEPRINT
+
+LEA R0 NOTOFFERED
+PUTS
+BR FINISH
+
+NO
+LDR R1 R0 #1
+LEA R2 COURSE
+
+;R4 = 1 = match, R4 = 0 = no match
+JSR MATCH
+
+ADD R4 R4 #0
+BRz NOMATCH
+
+LEA R0 SPACE
+PUTS
+LD R5 COUNTER
+LEA R2 COURSE
+
+COURSEPRINT2
+LDR R0 R2 #0
+OUT
+ADD R2 R2 #1
+ADD R5 R5 #-1
+BRp COURSEPRINT2
+
+LEA R0 OFFERED
+PUTS
+BR FINISH
+
+NOMATCH
+LDR R0 R0 #0
+BR R0NULL
+
+FINISH
+HALT
+
+MATCH
+ST R1 PTR1
+ST R2 PTR2
+
+MATCH2
+LDR R5 R1 #0
+LDR R6 R2 #0
+BRz ZERO
+
+NOT R6 R6
+ADD R6 R6 #1
+ADD R5 R5 R6
+BRz R5ZERO
+AND R4 R4 #0
+BR ZEROJUMP
+
+R5ZERO
+ADD R1 R1 #1
+ADD R2 R2 #1
+BR MATCH2
+
+ZERO
+AND R4 R4 #0
+ADD R4 R4 #1
+ZEROJUMP
+LD R1 PTR1
+LD R2 PTR2
+JMP R7
+
+
+PTR1 .FILL #0
+
+PTR2 .FILL #0
+
+PTR3 .FILL #0
+
+PTR4 .FILL #0
+
+
+HEADPTR
+    .FILL x4000
+MESSAGE
+    .STRINGZ "Type COURSE and press Enter:"
+COURSE
+    .BLKW x8
+COUNTER
+    .FILL x7
+ENTER
+    .FILL x-0A
+SPACE
+    .STRINGZ "\n"
+OFFERED
+    .STRINGZ "<COURSE> is offered this semester."
+NOTOFFERED
+    .STRINGZ "<COURSE> is not offered this semester."
+    
+    
+
+.END
